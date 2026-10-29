@@ -8,13 +8,13 @@
 
 // ======== CONFIGURE AQUI ========
 const char* NOME_BLUETOOTH = "Difusor";  // nome que aparece na hora de conectar
-const int PINO_DIFUSOR = 26;             // GPIO ligado ao rele / transistor
-const bool ATIVO_EM_ALTO = true;         // rele que liga com LOW? coloque false
+const int PINO_DIFUSOR = 13;             // D13 -> base do BC337 (via resistor ~1k)
+const bool ATIVO_EM_ALTO = true;         // BC337 conduz com HIGH
 
-// Se a ESP32 "aperta" o botao original do difusor em vez de ligar a energia,
-// coloque true: cada toque no app gera um pulso no pino.
-const bool MODO_PULSO = false;
-const int PULSO_MS = 300;
+// O BC337 "aperta" o botao do difusor: cada toque no app gera um pulso
+// HIGH por PULSO_MS e volta para LOW.
+const bool MODO_PULSO = true;
+const int PULSO_MS = 300;                // aumente se o difusor nao reconhecer o toque
 // ================================
 
 // Precisam ser iguais aos do app (index.html)
