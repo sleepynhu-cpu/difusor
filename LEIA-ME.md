@@ -31,7 +31,7 @@ Dica: no Bluefy, salve o link nos favoritos para abrir rápido.
 
 ### Mensagem pronta para o WhatsApp
 
-> Pra controlar o difusor: instala o app Bluefy (grátis na App Store), abre este link dentro dele: LINK_DO_APP
+> Pra controlar o difusor: instala o app Bluefy (grátis na App Store), abre este link dentro dele: https://sleepynhu-cpu.github.io/difusor/
 > Com o carro ligado, toca em Conectar, escolhe "Difusor" e usa o botão.
 
 ## Ligação sugerida (relé)
