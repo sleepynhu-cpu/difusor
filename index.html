@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Difusor">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Difusor</title>
+<style>
+  :root { --bg:#0f172a; --txt:#e2e8f0; --sub:#94a3b8; --on:#22c55e; --off:#334155; --azul:#3b82f6; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; min-height:100%; background:var(--bg); color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+    user-select:none; -webkit-user-select:none; text-align:center; }
+  h1 { margin:0; font-size:24px; font-weight:600; letter-spacing:.5px; }
+  .tela { display:none; flex-direction:column; align-items:center; gap:24px; width:100%; max-width:360px; }
+  .tela.ativa { display:flex; }
+  #btn { width:220px; height:220px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--off); color:#fff; font-size:28px; font-weight:700;
+    box-shadow:0 10px 40px rgba(0,0,0,.45); transition:background .25s, transform .1s, box-shadow .25s; }
+  #btn:active { transform:scale(.96); }
+  #btn.on { background:var(--on); box-shadow:0 0 60px rgba(34,197,94,.55); }
+  #btn:disabled { opacity:.6; }
+  .sec { border:none; border-radius:14px; padding:16px 28px; font-size:18px; font-weight:600;
+    background:var(--azul); color:#fff; cursor:pointer; width:100%; }
+  .sec:disabled { opacity:.6; }
+  .link { color:var(--sub); background:none; border:none; font-size:14px; text-decoration:underline; cursor:pointer; }
+  p { margin:0; color:var(--sub); font-size:15px; line-height:1.5; }
+  a { color:#93c5fd; }
+  ol { text-align:left; color:var(--sub); font-size:15px; line-height:1.6; margin:0; padding-left:22px; }
+</style>
+</head>
+<body>
+  <h1>Difusor</h1>
+
+  <!-- Navegador sem Bluetooth (Safari, Chrome do iPhone, WhatsApp...) -->
+  <section id="semBle" class="tela">
+    <p>O iPhone só deixa usar Bluetooth por página no app <b>Bluefy</b> (grátis).</p>
+    <ol>
+      <li><a href="https://apps.apple.com/br/app/bluefy-web-ble-browser/id1492822055">Instale o Bluefy na App Store</a></li>
+      <li>Copie este link e cole no Bluefy</li>
+    </ol>
+    <button class="sec" id="copiar">Copiar link</button>
+  </section>
+
+  <!-- Conectar -->
+  <section id="conectar" class="tela">
+    <p>Com o carro ligado, toque abaixo e escolha <b>Difusor</b>.</p>
+    <button class="sec" id="btnConectar">Conectar</button>
+    <p id="erro"></p>
+  </section>
+
+  <!-- Controle -->
+  <section id="controle" class="tela">
+    <button id="btn" disabled>...</button>
+    <p id="status"></p>
+    <button class="link" id="sair">Desconectar</button>
+  </section>
+
+<script>
+  const SERVICO = '8f1d0001-6c2e-4b7a-9d3f-2a5b1c0e7d41';
+  const ESTADO  = '8f1d0002-6c2e-4b7a-9d3f-2a5b1c0e7d41';
+  const $ = id => document.getElementById(id);
+  let aparelho = null, carac = null, ligado = false;
+
+  function tela(id) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.toggle('ativa', t.id === id));
+  }
+
+  function mostrar(v) {
+    ligado = v;
+    const btn = $('btn');
+    btn.disabled = false;
+    btn.classList.toggle('on', v);
+    btn.textContent = v ? 'LIGADO' : 'DESLIGADO';
+    $('status').textContent = 'Toque para ' + (v ? 'desligar' : 'ligar');
+  }
+
+  async function abrir(dev) {
+    aparelho = dev;
+    aparelho.addEventListener('gattserverdisconnected', aoDesconectar);
+    const gatt = await aparelho.gatt.connect();
+    const servico = await gatt.getPrimaryService(SERVICO);
+    carac = await servico.getCharacteristic(ESTADO);
+    carac.addEventListener('characteristicvaluechanged', e => mostrar(e.target.value.getUint8(0) === 1));
+    await carac.startNotifications();
+    mostrar((await carac.readValue()).getUint8(0) === 1);
+    tela('controle');
+  }
+
+  function aoDesconectar() {
+    carac = null;
+    $('erro').textContent = 'Conexão perdida. O carro está ligado?';
+    tela('conectar');
+  }
+
+  $('btnConectar').addEventListener('click', async () => {
+    const b = $('btnConectar');
+    b.disabled = true; b.textContent = 'Conectando...'; $('erro').textContent = '';
+    try {
+      const dev = (aparelho && !aparelho.gatt.connected) ? aparelho :
+        await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICO] }] });
+      await abrir(dev);
+    } catch (e) {
+      aparelho = null;
+      if (e.name !== 'NotFoundError') $('erro').textContent = 'Não conectou. Chegue mais perto e tente de novo.';
+    }
+    b.disabled = false; b.textContent = 'Conectar';
+  });
+
+  $('btn').addEventListener('click', async () => {
+    if (!carac) return;
+    $('btn').disabled = true;
+    try { await carac.writeValue(new Uint8Array([ligado ? 0 : 1])); }
+    catch (e) { $('status').textContent = 'Falhou, tente de novo.'; }
+    $('btn').disabled = false;
+  });
+
+  $('sair').addEventListener('click', () => {
+    if (aparelho && aparelho.gatt.connected) aparelho.gatt.disconnect();
+  });
+
+  $('copiar').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(location.href); $('copiar').textContent = 'Copiado!'; }
+    catch (e) { prompt('Copie o link:', location.href); }
+  });
+
+  if (!navigator.bluetooth) {
+    tela('semBle');
+  } else {
+    tela('conectar');
+    // Reconecta sozinho se o navegador lembrar do aparelho
+    if (navigator.bluetooth.getDevices) {
+      navigator.bluetooth.getDevices().then(lista => {
+        const dev = lista.find(d => d.name === 'Difusor');
+        if (dev) abrir(dev).catch(() => {});
+      }).catch(() => {});
+    }
+  }
+</script>
+</body>
+</html>
