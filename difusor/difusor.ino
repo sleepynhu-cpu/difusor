@@ -13,13 +13,13 @@
 const char* NOME_BLUETOOTH = "Difusor";  // nome que aparece na hora de conectar
 const char* SENHA = SENHA_DIFUSOR;       // senha pedida pelo app (definida em senha.h)
 
-const int PINO_ABRIR = 13;    // D13 -> base do BC337 do rele ABRIR (resistor ~1k)
-const int PINO_FECHAR = 15;   // D15 -> base do BC337 do rele FECHAR (resistor ~1k)
+const int PINO_ABRIR = 15;    // D15 -> base do BC337 do rele ABRIR (resistor ~1k)
                               // D15 fica fraco em HIGH na partida: use 10k base-emissor
+const int PINO_FECHAR = 13;   // D13 -> base do BC337 do rele FECHAR (resistor ~1k)
 const int PINO_BOTAO = 26;    // D26 <- botao que manda GND (pull-up)
 
-const unsigned long TEMPO_ABRIR_MS = 1000;   // quanto tempo o rele ABRIR fica ligado
-const unsigned long TEMPO_FECHAR_MS = 1000;  // quanto tempo o rele FECHAR fica ligado
+const unsigned long TEMPO_ABRIR_MS = 500;    // quanto tempo o rele ABRIR fica ligado
+const unsigned long TEMPO_FECHAR_MS = 500;   // quanto tempo o rele FECHAR fica ligado
 const unsigned long PAUSA_INVERSAO_MS = 300; // espera entre desligar um rele e ligar o outro
 // ================================
 
@@ -65,9 +65,8 @@ void definirEstado(Estado e) {
 }
 
 void comandar(bool abrir) {
-  Estado alvo = abrir ? ABERTO : FECHADO;
-  Estado movimento = abrir ? ABRINDO : FECHANDO;
-  if (estado == alvo || estado == movimento) return;
+  // Repetir o mesmo comando e permitido: corrige se a posicao salva nao bate com a real
+  if (estado == (abrir ? ABRINDO : FECHANDO)) return;
   // Nunca liga os dois reles juntos: desliga tudo e espera antes de inverter
   reles(false, false);
   pendente = abrir ? 1 : 0;

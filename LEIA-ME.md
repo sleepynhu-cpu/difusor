@@ -16,13 +16,13 @@ O celular conversa com a ESP32 **por Bluetooth**, sem Wi-Fi. Não atrapalha o 4G
 4. **Senha:** copie `difusor/senha.exemplo.h` para `difusor/senha.h` e escreva a senha nele.
    O `senha.h` fica só no seu PC e não vai para o GitHub (o repositório é público).
 5. Abra `difusor/difusor.ino`. No topo dá para mudar
-   `TEMPO_ABRIR_MS` / `TEMPO_FECHAR_MS`: quanto tempo cada relé fica ligado (hoje 1 s).
+   `TEMPO_ABRIR_MS` / `TEMPO_FECHAR_MS`: quanto tempo cada relé fica ligado (hoje 0,5 s).
 6. Selecione a placa **DOIT ESP32 DEVKIT V1**, a porta COM e clique em **Carregar**.
 
 ## 2. Como funciona
 
-- **ABRIR**: liga o relé do D13 pelo tempo configurado e desliga.
-- **FECHAR**: liga o relé do D15 pelo tempo configurado e desliga.
+- **ABRIR**: liga o relé do D15 pelo tempo configurado e desliga.
+- **FECHAR**: liga o relé do D13 pelo tempo configurado e desliga.
 - Os dois relés **nunca** ligam juntos; ao inverter, há uma pausa de 0,3 s.
 - **Botão físico (D26)**: se está aberto, fecha; se está fechado, abre.
 - A ESP32 guarda na memória se ficou aberto ou fechado, mesmo desligando o carro.
@@ -45,7 +45,7 @@ Com o carro ligado: **Conectar** → escolha **Difusor** → digite a senha → 
 
 BC337 de frente (lado reto com o texto, pernas para baixo): **C – B – E**.
 
-Para **cada** relé (ABRIR no D13, FECHAR no D15):
+Para **cada** relé (ABRIR no D15, FECHAR no D13):
 
 ```
 D13 (ou D15) ──[1 kΩ]──► Base BC337
