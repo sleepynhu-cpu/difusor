@@ -4,63 +4,143 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Difusor">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#050608">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-<title>Difusor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Difusor 320i</title>
 <style>
-  :root { --bg:#0f172a; --txt:#e2e8f0; --sub:#94a3b8; --on:#22c55e; --off:#334155; --azul:#3b82f6; }
+  :root {
+    --bg:#050608; --txt:#e8ecf2; --sub:#7d8794; --linha:#1c2027;
+    --gelo:#5ccfff; --gelo-forte:#a8e6ff; --vermelho:#ff3b3b;
+    --titulo:"Michroma", "Eurostile", "Arial Black", sans-serif;
+    --texto:"Rajdhani", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { margin:0; min-height:100%; background:var(--bg); color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:28px; padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
-    user-select:none; -webkit-user-select:none; text-align:center; }
-  h1 { margin:0; font-size:24px; font-weight:600; letter-spacing:.5px; }
-  .tela { display:none; flex-direction:column; align-items:center; gap:24px; width:100%; max-width:360px; }
-  .tela.ativa { display:flex; }
-  #btn { width:220px; height:220px; border-radius:50%; border:none; cursor:pointer;
-    background:var(--off); color:#fff; font-size:28px; font-weight:700;
-    box-shadow:0 10px 40px rgba(0,0,0,.45); transition:background .25s, transform .1s, box-shadow .25s; }
-  #btn:active { transform:scale(.96); }
-  #btn.on { background:var(--on); box-shadow:0 0 60px rgba(34,197,94,.55); }
-  #btn:disabled { opacity:.6; }
-  .sec { border:none; border-radius:14px; padding:16px 28px; font-size:18px; font-weight:600;
-    background:var(--azul); color:#fff; cursor:pointer; width:100%; }
-  .sec:disabled { opacity:.6; }
-  .link { color:var(--sub); background:none; border:none; font-size:14px; text-decoration:underline; cursor:pointer; }
-  p { margin:0; color:var(--sub); font-size:15px; line-height:1.5; }
-  a { color:#93c5fd; }
-  ol { text-align:left; color:var(--sub); font-size:15px; line-height:1.6; margin:0; padding-left:22px; }
+  html,body { margin:0; min-height:100%; background:var(--bg); color:var(--txt); font-family:var(--texto); }
+  body { min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; user-select:none; -webkit-user-select:none; overflow-x:hidden; }
+
+  /* ---------- foto ---------- */
+  .hero { position:relative; }
+  .foto { position:relative; aspect-ratio:16/9; max-height:46vh; width:100%; overflow:hidden; }
+  .foto img { width:100%; height:100%; object-fit:cover; object-position:30% 70%; display:block;
+    transition:filter .6s; filter:brightness(.72) saturate(.8); }
+  body.ativo .foto img { filter:brightness(.95) saturate(.9); }
+  .foto::after { content:""; position:absolute; inset:0;
+    background:
+      linear-gradient(180deg, rgba(5,6,8,.8) 0%, rgba(5,6,8,0) 25%, rgba(5,6,8,0) 70%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(5,6,8,.35) 0%, transparent 25%, transparent 75%, rgba(5,6,8,.6) 100%); }
+  .marca { position:relative; margin-top:-6px; text-align:center; }
+  .modelo { font-family:var(--titulo); font-size:11px; letter-spacing:6px; color:var(--sub); text-transform:uppercase; }
+  h1 { margin:6px 0 0; font-family:var(--titulo); font-weight:400; font-size:30px; letter-spacing:8px; text-indent:8px; }
+  .faixa { width:90px; height:2px; margin:12px auto 0; background:linear-gradient(90deg, transparent, var(--gelo), transparent); }
+
+  /* ---------- telas ---------- */
+  main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:12px 16px calc(env(safe-area-inset-bottom) + 12px); }
+  .tela { display:none; flex-direction:column; align-items:center; gap:22px; width:100%; max-width:360px; text-align:center; }
+  .tela.ativa { display:flex; animation:surgir .45s ease-out; }
+  @keyframes surgir { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  .chip { display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border:1px solid var(--linha); border-radius:99px;
+    font-size:12px; font-weight:600; letter-spacing:3px; color:var(--sub); text-transform:uppercase; }
+  .chip i { width:7px; height:7px; border-radius:50%; background:var(--vermelho); box-shadow:0 0 8px var(--vermelho); }
+  .chip.ok i { background:var(--gelo); box-shadow:0 0 8px var(--gelo); }
+
+  /* ---------- botão estilo Start/Stop ---------- */
+  .start { position:relative; width:210px; height:210px; border-radius:50%; border:none; padding:0; cursor:pointer;
+    background:conic-gradient(from 210deg, #5d636d, #e9edf2, #8a9099, #2c3036, #c9ced6, #5d636d);
+    box-shadow:0 18px 50px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.15); transition:transform .12s; }
+  .start:active { transform:scale(.965); }
+  .start:disabled { cursor:default; }
+  .start .face { position:absolute; inset:11px; border-radius:50%;
+    background:radial-gradient(circle at 50% 35%, #23272e 0%, #0d0f12 60%, #050608 100%);
+    box-shadow:inset 0 6px 16px rgba(0,0,0,.9), inset 0 -2px 6px rgba(255,255,255,.05);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  .start .led { position:absolute; inset:20px; border-radius:50%; border:2px solid rgba(255,59,59,.35);
+    box-shadow:0 0 10px rgba(255,59,59,.25), inset 0 0 10px rgba(255,59,59,.2); transition:all .4s; }
+  .start .rotulo { font-family:var(--titulo); font-size:10px; letter-spacing:4px; color:var(--sub); }
+  .start svg { width:46px; height:46px; stroke:#cfd5dd; transition:stroke .4s, filter .4s; }
+  .start .acao { font-family:var(--titulo); font-size:14px; letter-spacing:5px; text-indent:5px; color:var(--txt); }
+  .start.on .led { border-color:var(--gelo); box-shadow:0 0 22px var(--gelo), inset 0 0 18px rgba(92,207,255,.55); animation:respira 2.6s ease-in-out infinite; }
+  .start.on svg { stroke:var(--gelo-forte); filter:drop-shadow(0 0 6px var(--gelo)); }
+  .start.on .rotulo { color:var(--gelo); }
+  .start:disabled .face { opacity:.75; }
+  @keyframes respira { 50% { box-shadow:0 0 34px var(--gelo), inset 0 0 26px rgba(92,207,255,.75); } }
+
+  .status { font-size:15px; font-weight:600; letter-spacing:3px; color:var(--sub); text-transform:uppercase; min-height:20px; }
+  body.ativo .status { color:var(--gelo-forte); }
+
+  .acao-sec { width:100%; padding:17px; border-radius:4px; border:1px solid rgba(92,207,255,.55); background:rgba(92,207,255,.06);
+    color:var(--txt); font-family:var(--titulo); font-size:13px; letter-spacing:5px; text-indent:5px; cursor:pointer;
+    box-shadow:0 0 24px rgba(92,207,255,.12), inset 0 0 18px rgba(92,207,255,.06); display:flex; align-items:center; justify-content:center; gap:12px; }
+  .acao-sec:active { background:rgba(92,207,255,.16); }
+  .acao-sec:disabled { opacity:.55; }
+  .acao-sec svg { width:18px; height:18px; stroke:var(--gelo); flex:none; }
+  .link { background:none; border:none; color:var(--sub); font-family:var(--texto); font-size:13px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; padding:6px; }
+  p { margin:0; color:var(--sub); font-size:17px; line-height:1.45; font-weight:500; }
+  p b { color:var(--txt); }
+  #erro { color:#ff8a8a; font-size:15px; min-height:22px; }
+  ol { margin:0; padding-left:22px; text-align:left; color:var(--sub); font-size:17px; line-height:1.7; font-weight:500; }
+  a { color:var(--gelo); }
+  .credito { font-size:10px; color:#3d444e; text-align:center; padding:0 16px 8px; letter-spacing:.5px; }
+  .credito a { color:#4a525d; }
 </style>
 </head>
 <body>
-  <h1>Difusor</h1>
+  <header class="hero">
+    <div class="foto"><img src="carro.jpg" alt="BMW 320i prata"></div>
+    <div class="marca">
+      <div class="modelo">320i · Aroma Control</div>
+      <h1>DIFUSOR</h1>
+      <div class="faixa"></div>
+    </div>
+  </header>
 
-  <!-- Navegador sem Bluetooth (Safari, Chrome do iPhone, WhatsApp...) -->
-  <section id="semBle" class="tela">
-    <p>O iPhone só deixa usar Bluetooth por página no app <b>Bluefy</b> (grátis).</p>
-    <ol>
-      <li><a href="https://apps.apple.com/br/app/bluefy-web-ble-browser/id1492822055">Instale o Bluefy na App Store</a></li>
-      <li>Copie este link e cole no Bluefy</li>
-    </ol>
-    <button class="sec" id="copiar">Copiar link</button>
-  </section>
+  <main>
+    <!-- Navegador sem Bluetooth (Safari, Chrome do iPhone, WhatsApp...) -->
+    <section id="semBle" class="tela">
+      <span class="chip"><i></i>Bluetooth indisponível</span>
+      <p>No iPhone, o controle funciona pelo app <b>Bluefy</b> (grátis).</p>
+      <ol>
+        <li><a href="https://apps.apple.com/br/app/bluefy-web-ble-browser/id1492822055">Instale o Bluefy na App Store</a></li>
+        <li>Copie este link e abra no Bluefy</li>
+      </ol>
+      <button class="acao-sec" id="copiar">COPIAR LINK</button>
+    </section>
 
-  <!-- Conectar -->
-  <section id="conectar" class="tela">
-    <p>Com o carro ligado, toque abaixo e escolha <b>Difusor</b>.</p>
-    <button class="sec" id="btnConectar">Conectar</button>
-    <p id="erro"></p>
-  </section>
+    <!-- Conectar -->
+    <section id="conectar" class="tela">
+      <span class="chip"><i></i>Desconectado</span>
+      <p>Com o carro ligado, toque em conectar e escolha <b>Difusor</b>.</p>
+      <button class="acao-sec" id="btnConectar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
+        <span>CONECTAR</span>
+      </button>
+      <p id="erro"></p>
+    </section>
 
-  <!-- Controle -->
-  <section id="controle" class="tela">
-    <button id="btn" disabled>...</button>
-    <p id="status"></p>
-    <button class="link" id="sair">Desconectar</button>
-  </section>
+    <!-- Controle -->
+    <section id="controle" class="tela">
+      <span class="chip ok"><i></i>Conectado</span>
+      <button id="btn" class="start" disabled aria-label="Ligar ou desligar o difusor">
+        <span class="face">
+          <span class="led"></span>
+          <span class="rotulo">AROMA</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0"/></svg>
+          <span class="acao" id="acao">ON</span>
+        </span>
+      </button>
+      <div class="status" id="status"></div>
+      <button class="link" id="sair">Desconectar</button>
+    </section>
+  </main>
+
+  <div class="credito">Foto: <a href="https://commons.wikimedia.org/wiki/File:2019_BMW_318d_SE_Automatic_2.0_Front.jpg">Vauxford</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.pt-br">CC BY-SA 4.0</a> (editada)</div>
 
 <script>
   const SERVICO = '8f1d0001-6c2e-4b7a-9d3f-2a5b1c0e7d41';
@@ -70,15 +150,16 @@
 
   function tela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.toggle('ativa', t.id === id));
+    if (id !== 'controle') document.body.classList.remove('ativo');
   }
 
   function mostrar(v) {
     ligado = v;
-    const btn = $('btn');
-    btn.disabled = false;
-    btn.classList.toggle('on', v);
-    btn.textContent = v ? 'LIGADO' : 'DESLIGADO';
-    $('status').textContent = 'Toque para ' + (v ? 'desligar' : 'ligar');
+    $('btn').disabled = false;
+    $('btn').classList.toggle('on', v);
+    document.body.classList.toggle('ativo', v);
+    $('acao').textContent = v ? 'OFF' : 'ON';
+    $('status').textContent = v ? 'Difusor ativo' : 'Standby';
   }
 
   async function abrir(dev) {
@@ -100,8 +181,8 @@
   }
 
   $('btnConectar').addEventListener('click', async () => {
-    const b = $('btnConectar');
-    b.disabled = true; b.textContent = 'Conectando...'; $('erro').textContent = '';
+    const b = $('btnConectar'), t = b.querySelector('span');
+    b.disabled = true; t.textContent = 'CONECTANDO'; $('erro').textContent = '';
     try {
       const dev = (aparelho && !aparelho.gatt.connected) ? aparelho :
         await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICO] }] });
@@ -110,14 +191,15 @@
       aparelho = null;
       if (e.name !== 'NotFoundError') $('erro').textContent = 'Não conectou. Chegue mais perto e tente de novo.';
     }
-    b.disabled = false; b.textContent = 'Conectar';
+    b.disabled = false; t.textContent = 'CONECTAR';
   });
 
   $('btn').addEventListener('click', async () => {
     if (!carac) return;
     $('btn').disabled = true;
+    if (navigator.vibrate) navigator.vibrate(15);
     try { await carac.writeValue(new Uint8Array([ligado ? 0 : 1])); }
-    catch (e) { $('status').textContent = 'Falhou, tente de novo.'; }
+    catch (e) { $('status').textContent = 'Falhou, tente de novo'; }
     $('btn').disabled = false;
   });
 
@@ -126,7 +208,7 @@
   });
 
   $('copiar').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(location.href); $('copiar').textContent = 'Copiado!'; }
+    try { await navigator.clipboard.writeText(location.href); $('copiar').textContent = 'COPIADO'; }
     catch (e) { prompt('Copie o link:', location.href); }
   });
 
