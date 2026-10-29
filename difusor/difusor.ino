@@ -18,8 +18,8 @@ const int PINO_FECHAR = 15;   // D15 -> base do BC337 do rele FECHAR (resistor ~
                               // D15 fica fraco em HIGH na partida: use 10k base-emissor
 const int PINO_BOTAO = 26;    // D26 <- botao que manda GND (pull-up)
 
-const unsigned long TEMPO_ABRIR_MS = 3000;   // quanto tempo o rele ABRIR fica ligado
-const unsigned long TEMPO_FECHAR_MS = 3000;  // quanto tempo o rele FECHAR fica ligado
+const unsigned long TEMPO_ABRIR_MS = 1000;   // quanto tempo o rele ABRIR fica ligado
+const unsigned long TEMPO_FECHAR_MS = 1000;  // quanto tempo o rele FECHAR fica ligado
 const unsigned long PAUSA_INVERSAO_MS = 300; // espera entre desligar um rele e ligar o outro
 // ================================
 

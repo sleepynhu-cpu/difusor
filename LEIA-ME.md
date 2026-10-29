@@ -16,7 +16,7 @@ O celular conversa com a ESP32 **por Bluetooth**, sem Wi-Fi. Não atrapalha o 4G
 4. **Senha:** copie `difusor/senha.exemplo.h` para `difusor/senha.h` e escreva a senha nele.
    O `senha.h` fica só no seu PC e não vai para o GitHub (o repositório é público).
 5. Abra `difusor/difusor.ino`. No topo dá para mudar
-   `TEMPO_ABRIR_MS` / `TEMPO_FECHAR_MS`: quanto tempo cada relé fica ligado (hoje 3 s).
+   `TEMPO_ABRIR_MS` / `TEMPO_FECHAR_MS`: quanto tempo cada relé fica ligado (hoje 1 s).
 6. Selecione a placa **DOIT ESP32 DEVKIT V1**, a porta COM e clique em **Carregar**.
 
 ## 2. Como funciona
