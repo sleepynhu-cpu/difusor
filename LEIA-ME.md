@@ -28,6 +28,12 @@ Use uma ESP32 comum (ESP32, S3 ou C3). A ESP32-S2 **não tem Bluetooth**.
 
 Dica: no Bluefy, salve o link nos favoritos para abrir rápido.
 
+## No Android
+
+Não precisa de app extra: abra o link no **Google Chrome**, deixe o Bluetooth
+(e a Localização, que o Android exige para achar aparelhos Bluetooth) ligados e
+toque em **Conectar**. Pelo menu ⋮ → **Adicionar à tela inicial** fica com ícone de app.
+
 ### Mensagem pronta para o WhatsApp
 
 > Pra controlar o difusor: instala o app Bluefy (grátis na App Store), abre este link dentro dele: https://sleepynhu-cpu.github.io/difusor/
