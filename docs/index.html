@@ -51,26 +51,25 @@
   .chip i { width:7px; height:7px; border-radius:50%; background:var(--vermelho); box-shadow:0 0 8px var(--vermelho); }
   .chip.ok i { background:var(--gelo); box-shadow:0 0 8px var(--gelo); }
 
-  /* ---------- botão estilo Start/Stop ---------- */
-  .start { position:relative; width:210px; height:210px; border-radius:50%; border:none; padding:0; cursor:pointer;
+  /* ---------- botões estilo Start/Stop ---------- */
+  .par { display:flex; gap:22px; justify-content:center; }
+  .start { position:relative; width:150px; height:150px; border-radius:50%; border:none; padding:0; cursor:pointer;
     background:conic-gradient(from 210deg, #5d636d, #e9edf2, #8a9099, #2c3036, #c9ced6, #5d636d);
-    box-shadow:0 18px 50px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.15); transition:transform .12s; }
-  .start:active { transform:scale(.965); }
+    box-shadow:0 14px 40px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.15); transition:transform .12s; }
+  .start:active { transform:scale(.96); }
   .start:disabled { cursor:default; }
-  .start .face { position:absolute; inset:11px; border-radius:50%;
+  .start .face { position:absolute; inset:9px; border-radius:50%;
     background:radial-gradient(circle at 50% 35%, #23272e 0%, #0d0f12 60%, #050608 100%);
     box-shadow:inset 0 6px 16px rgba(0,0,0,.9), inset 0 -2px 6px rgba(255,255,255,.05);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-  .start .led { position:absolute; inset:20px; border-radius:50%; border:2px solid rgba(255,59,59,.35);
-    box-shadow:0 0 10px rgba(255,59,59,.25), inset 0 0 10px rgba(255,59,59,.2); transition:all .4s; }
-  .start .rotulo { font-family:var(--titulo); font-size:10px; letter-spacing:4px; color:var(--sub); }
-  .start svg { width:46px; height:46px; stroke:#cfd5dd; transition:stroke .4s, filter .4s; }
-  .start .acao { font-family:var(--titulo); font-size:14px; letter-spacing:5px; text-indent:5px; color:var(--txt); }
-  .start.on .led { border-color:var(--gelo); box-shadow:0 0 22px var(--gelo), inset 0 0 18px rgba(92,207,255,.55); animation:respira 2.6s ease-in-out infinite; }
+  .start .led { position:absolute; inset:15px; border-radius:50%; border:2px solid rgba(255,255,255,.08); transition:all .4s; }
+  .start svg { width:34px; height:34px; stroke:#cfd5dd; transition:stroke .4s, filter .4s; }
+  .start .acao { font-family:var(--titulo); font-size:11px; letter-spacing:2px; text-indent:2px; color:var(--txt); }
+  .start.on .led { border-color:var(--gelo); box-shadow:0 0 20px var(--gelo), inset 0 0 16px rgba(92,207,255,.55); }
   .start.on svg { stroke:var(--gelo-forte); filter:drop-shadow(0 0 6px var(--gelo)); }
-  .start.on .rotulo { color:var(--gelo); }
-  .start:disabled .face { opacity:.75; }
-  @keyframes respira { 50% { box-shadow:0 0 34px var(--gelo), inset 0 0 26px rgba(92,207,255,.75); } }
+  .start.mov .led { border-color:var(--gelo); animation:pisca .7s ease-in-out infinite; }
+  .start:disabled .face { opacity:.7; }
+  @keyframes pisca { 50% { box-shadow:0 0 26px var(--gelo), inset 0 0 20px rgba(92,207,255,.7); border-color:var(--gelo-forte); } }
 
   .status { font-size:15px; font-weight:600; letter-spacing:3px; color:var(--sub); text-transform:uppercase; min-height:20px; }
   body.ativo .status { color:var(--gelo-forte); }
@@ -84,9 +83,16 @@
   .link { background:none; border:none; color:var(--sub); font-family:var(--texto); font-size:13px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; padding:6px; }
   p { margin:0; color:var(--sub); font-size:17px; line-height:1.45; font-weight:500; }
   p b { color:var(--txt); }
-  #erro { color:#ff8a8a; font-size:15px; min-height:22px; }
+  .erro { color:#ff8a8a; font-size:15px; min-height:22px; }
   ol { margin:0; padding-left:22px; text-align:left; color:var(--sub); font-size:17px; line-height:1.7; font-weight:500; }
   a { color:var(--gelo); }
+
+  /* ---------- senha ---------- */
+  .campo { width:100%; padding:16px; border-radius:4px; border:1px solid var(--linha); background:#0b0d11; color:var(--txt);
+    font-family:var(--titulo); font-size:18px; letter-spacing:6px; text-align:center; outline:none; user-select:text; -webkit-user-select:text; }
+  .campo:focus { border-color:rgba(92,207,255,.6); box-shadow:0 0 18px rgba(92,207,255,.15); }
+  .lembrar { display:flex; align-items:center; gap:10px; color:var(--sub); font-size:15px; letter-spacing:1px; }
+  .lembrar input { width:18px; height:18px; accent-color:var(--gelo); }
   .credito { font-size:10px; color:#3d444e; text-align:center; padding:0 16px 8px; letter-spacing:.5px; }
   .credito a { color:#4a525d; }
 </style>
@@ -122,20 +128,43 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
         <span>CONECTAR</span>
       </button>
-      <p id="erro"></p>
+      <p class="erro" id="erro"></p>
+    </section>
+
+    <!-- Senha -->
+    <section id="senha" class="tela">
+      <span class="chip"><i></i>Bloqueado</span>
+      <form id="formSenha" style="display:contents">
+        <input class="campo" id="campoSenha" type="password" autocomplete="current-password" placeholder="SENHA" autocapitalize="off" autocorrect="off">
+        <label class="lembrar"><input type="checkbox" id="lembrar" checked> Lembrar neste aparelho</label>
+        <button class="acao-sec" id="btnSenha" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <span>DESBLOQUEAR</span>
+        </button>
+      </form>
+      <p class="erro" id="erroSenha"></p>
+      <button class="link" id="sair2">Desconectar</button>
     </section>
 
     <!-- Controle -->
     <section id="controle" class="tela">
       <span class="chip ok"><i></i>Conectado</span>
-      <button id="btn" class="start" disabled aria-label="Ligar ou desligar o difusor">
-        <span class="face">
-          <span class="led"></span>
-          <span class="rotulo">AROMA</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0"/></svg>
-          <span class="acao" id="acao">ON</span>
-        </span>
-      </button>
+      <div class="par">
+        <button id="btnAbrir" class="start" disabled aria-label="Abrir o difusor">
+          <span class="face">
+            <span class="led"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6"/><path d="M15 6l6 6-6 6"/></svg>
+            <span class="acao">ABRIR</span>
+          </span>
+        </button>
+        <button id="btnFechar" class="start" disabled aria-label="Fechar o difusor">
+          <span class="face">
+            <span class="led"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6 6-6 6"/><path d="M21 6l-6 6 6 6"/></svg>
+            <span class="acao">FECHAR</span>
+          </span>
+        </button>
+      </div>
       <div class="status" id="status"></div>
       <button class="link" id="sair">Desconectar</button>
     </section>
@@ -146,21 +175,38 @@
 <script>
   const SERVICO = '8f1d0001-6c2e-4b7a-9d3f-2a5b1c0e7d41';
   const ESTADO  = '8f1d0002-6c2e-4b7a-9d3f-2a5b1c0e7d41';
+  const SENHA   = '8f1d0003-6c2e-4b7a-9d3f-2a5b1c0e7d41';
+  const FECHADO = 0, ABERTO = 1, ABRINDO = 2, FECHANDO = 3, BLOQUEADO = 255;
+  const CHAVE = 'difusor-senha';
   const $ = id => document.getElementById(id);
-  let aparelho = null, carac = null, ligado = false;
+  let aparelho = null, caracEstado = null, caracSenha = null;
 
   function tela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.toggle('ativa', t.id === id));
     if (id !== 'controle') document.body.classList.remove('ativo');
   }
 
-  function mostrar(v) {
-    ligado = v;
-    $('btn').disabled = false;
-    $('btn').classList.toggle('on', v);
-    document.body.classList.toggle('ativo', v);
-    $('acao').textContent = v ? 'OFF' : 'ON';
-    $('status').textContent = v ? 'Difusor ativo' : 'Standby';
+  function lerSalva() { try { return localStorage.getItem(CHAVE); } catch (e) { return null; } }
+  function salvar(s) { try { s ? localStorage.setItem(CHAVE, s) : localStorage.removeItem(CHAVE); } catch (e) {} }
+
+  function mostrar(e) {
+    if (e === BLOQUEADO) { if (!$('senha').classList.contains('ativa')) tela('senha'); return; }
+    if (!$('controle').classList.contains('ativa')) tela('controle');
+    const abrir = $('btnAbrir'), fechar = $('btnFechar');
+    abrir.disabled = fechar.disabled = false;
+    abrir.classList.toggle('on', e === ABERTO);
+    fechar.classList.toggle('on', e === FECHADO);
+    abrir.classList.toggle('mov', e === ABRINDO);
+    fechar.classList.toggle('mov', e === FECHANDO);
+    document.body.classList.toggle('ativo', e === ABERTO || e === ABRINDO);
+    $('status').textContent = { [FECHADO]:'Fechado', [ABERTO]:'Aberto', [ABRINDO]:'Abrindo...', [FECHANDO]:'Fechando...' }[e] || '';
+  }
+
+  async function enviarSenha(s) {
+    await caracSenha.writeValue(new TextEncoder().encode(s));
+    const e = (await caracEstado.readValue()).getUint8(0);
+    if (e !== BLOQUEADO) mostrar(e);
+    return e !== BLOQUEADO;
   }
 
   async function abrir(dev) {
@@ -168,15 +214,20 @@
     aparelho.addEventListener('gattserverdisconnected', aoDesconectar);
     const gatt = await aparelho.gatt.connect();
     const servico = await gatt.getPrimaryService(SERVICO);
-    carac = await servico.getCharacteristic(ESTADO);
-    carac.addEventListener('characteristicvaluechanged', e => mostrar(e.target.value.getUint8(0) === 1));
-    await carac.startNotifications();
-    mostrar((await carac.readValue()).getUint8(0) === 1);
-    tela('controle');
+    caracEstado = await servico.getCharacteristic(ESTADO);
+    caracSenha = await servico.getCharacteristic(SENHA);
+    caracEstado.addEventListener('characteristicvaluechanged', ev => mostrar(ev.target.value.getUint8(0)));
+    await caracEstado.startNotifications();
+    const salva = lerSalva();
+    if (salva && await enviarSenha(salva)) return;
+    $('erroSenha').textContent = salva ? 'A senha salva não confere.' : '';
+    tela('senha');
+    $('campoSenha').value = '';
+    $('campoSenha').focus();
   }
 
   function aoDesconectar() {
-    carac = null;
+    caracEstado = caracSenha = null;
     $('erro').textContent = 'Conexão perdida. O carro está ligado?';
     tela('conectar');
   }
@@ -195,18 +246,36 @@
     b.disabled = false; t.textContent = 'CONECTAR';
   });
 
-  $('btn').addEventListener('click', async () => {
-    if (!carac) return;
-    $('btn').disabled = true;
-    if (navigator.vibrate) navigator.vibrate(15);
-    try { await carac.writeValue(new Uint8Array([ligado ? 0 : 1])); }
-    catch (e) { $('status').textContent = 'Falhou, tente de novo'; }
-    $('btn').disabled = false;
+  $('formSenha').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const s = $('campoSenha').value;
+    if (!s || !caracSenha) return;
+    const b = $('btnSenha');
+    b.disabled = true; $('erroSenha').textContent = '';
+    try {
+      if (await enviarSenha(s)) {
+        salvar($('lembrar').checked ? s : null);
+        $('campoSenha').blur();
+      } else {
+        salvar(null);
+        $('erroSenha').textContent = 'Senha incorreta. Após 5 erros, aguarde 30 s.';
+      }
+    } catch (e) { $('erroSenha').textContent = 'Falhou, tente de novo.'; }
+    b.disabled = false;
   });
 
-  $('sair').addEventListener('click', () => {
-    if (aparelho && aparelho.gatt.connected) aparelho.gatt.disconnect();
-  });
+  async function comandar(valor) {
+    if (!caracEstado) return;
+    if (navigator.vibrate) navigator.vibrate(15);
+    try { await caracEstado.writeValue(new Uint8Array([valor])); }
+    catch (e) { $('status').textContent = 'Falhou, tente de novo'; }
+  }
+  $('btnAbrir').addEventListener('click', () => comandar(1));
+  $('btnFechar').addEventListener('click', () => comandar(0));
+
+  function desconectar() { if (aparelho && aparelho.gatt.connected) aparelho.gatt.disconnect(); }
+  $('sair').addEventListener('click', desconectar);
+  $('sair2').addEventListener('click', desconectar);
 
   $('copiar').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(location.href); $('copiar').textContent = 'COPIADO'; }

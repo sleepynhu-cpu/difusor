@@ -1,69 +1,138 @@
 // Difusor Bluetooth — ESP32
-// O iPhone conecta direto por Bluetooth (BLE), sem Wi-Fi.
-// No iPhone: abra o link do app no Bluefy (gratis na App Store) e toque em Conectar.
+// Dois BC337 acionam dois reles: um ABRE e outro FECHA o difusor, por tempo.
+// O app (Bluefy no iPhone / Chrome no Android) so comanda depois da senha.
+// Um botao fisico (manda GND) alterna entre abrir e fechar.
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
+#include <Preferences.h>
+#include "senha.h"  // fica so no seu PC (nao vai para o GitHub); modelo em senha.exemplo.h
 
 // ======== CONFIGURE AQUI ========
 const char* NOME_BLUETOOTH = "Difusor";  // nome que aparece na hora de conectar
-const int PINO_DIFUSOR = 13;             // D13 -> base do BC337 (via resistor ~1k)
-const bool ATIVO_EM_ALTO = true;         // BC337 conduz com HIGH
+const char* SENHA = SENHA_DIFUSOR;       // senha pedida pelo app (definida em senha.h)
 
-// O BC337 "aperta" o botao do difusor: cada toque no app gera um pulso
-// HIGH por PULSO_MS e volta para LOW.
-const bool MODO_PULSO = true;
-const int PULSO_MS = 300;                // aumente se o difusor nao reconhecer o toque
+const int PINO_ABRIR = 13;    // D13 -> base do BC337 do rele ABRIR (resistor ~1k)
+const int PINO_FECHAR = 15;   // D15 -> base do BC337 do rele FECHAR (resistor ~1k)
+                              // D15 fica fraco em HIGH na partida: use 10k base-emissor
+const int PINO_BOTAO = 26;    // D26 <- botao que manda GND (pull-up)
+
+const unsigned long TEMPO_ABRIR_MS = 3000;   // quanto tempo o rele ABRIR fica ligado
+const unsigned long TEMPO_FECHAR_MS = 3000;  // quanto tempo o rele FECHAR fica ligado
+const unsigned long PAUSA_INVERSAO_MS = 300; // espera entre desligar um rele e ligar o outro
 // ================================
 
 // Precisam ser iguais aos do app (index.html)
 #define UUID_SERVICO "8f1d0001-6c2e-4b7a-9d3f-2a5b1c0e7d41"
 #define UUID_ESTADO  "8f1d0002-6c2e-4b7a-9d3f-2a5b1c0e7d41"
+#define UUID_SENHA   "8f1d0003-6c2e-4b7a-9d3f-2a5b1c0e7d41"
+
+// Estados enviados ao app
+enum Estado : uint8_t { FECHADO = 0, ABERTO = 1, ABRINDO = 2, FECHANDO = 3, BLOQUEADO = 0xFF };
 
 BLECharacteristic* caracEstado;
-bool ligado = false;
-volatile int pedido = -1;  // -1 nada, 0 desligar, 1 ligar, 2 alternar
-volatile bool reanunciar = false;
+Preferences memoria;
 
-void aplicarSaida(bool ativo) {
-  digitalWrite(PINO_DIFUSOR, ativo == ATIVO_EM_ALTO ? HIGH : LOW);
+Estado estado = FECHADO;        // posicao atual (salva na memoria)
+unsigned long inicioMovimento = 0;
+unsigned long liberarEm = 0;    // fim da pausa entre reles
+int pendente = -1;              // comando aguardando a pausa: 1 abrir, 0 fechar
+
+volatile bool autenticado = false;
+volatile int pedido = -1;       // -1 nada, 0 fechar, 1 abrir
+volatile bool reanunciar = false;
+volatile bool conectou = false;
+volatile int tentativasErradas = 0;
+volatile unsigned long bloqueioAte = 0;
+
+void reles(bool abrir, bool fechar) {
+  digitalWrite(PINO_ABRIR, abrir ? HIGH : LOW);
+  digitalWrite(PINO_FECHAR, fechar ? HIGH : LOW);
 }
 
 void publicarEstado() {
-  uint8_t v = ligado ? 1 : 0;
+  uint8_t v = autenticado ? estado : BLOQUEADO;
   caracEstado->setValue(&v, 1);
   caracEstado->notify();
 }
 
-void definirDifusor(bool novoEstado) {
-  if (novoEstado != ligado) {
-    if (MODO_PULSO) {
-      aplicarSaida(true);
-      delay(PULSO_MS);
-      aplicarSaida(false);
-    } else {
-      aplicarSaida(novoEstado);
-    }
-    ligado = novoEstado;
-  }
+void definirEstado(Estado e) {
+  estado = e;
+  if (e == ABERTO || e == FECHADO) memoria.putUChar("estado", e);
+  Serial.printf("Estado: %d\n", e);
   publicarEstado();
 }
 
+void comandar(bool abrir) {
+  Estado alvo = abrir ? ABERTO : FECHADO;
+  Estado movimento = abrir ? ABRINDO : FECHANDO;
+  if (estado == alvo || estado == movimento) return;
+  // Nunca liga os dois reles juntos: desliga tudo e espera antes de inverter
+  reles(false, false);
+  pendente = abrir ? 1 : 0;
+  liberarEm = millis() + PAUSA_INVERSAO_MS;
+}
+
 class ServidorCallbacks : public BLEServerCallbacks {
-  void onDisconnect(BLEServer*) override { reanunciar = true; }
+  void onConnect(BLEServer*) override { conectou = true; }
+  void onDisconnect(BLEServer*) override {
+    autenticado = false;
+    reanunciar = true;
+  }
+};
+
+class SenhaCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic* c) override {
+    if (millis() < bloqueioAte) {
+      autenticado = false;
+    } else {
+      size_t n = c->getLength();
+      autenticado = n == strlen(SENHA) && memcmp(c->getData(), SENHA, n) == 0;
+      if (autenticado) {
+        tentativasErradas = 0;
+      } else if (++tentativasErradas >= 5) {
+        tentativasErradas = 0;
+        bloqueioAte = millis() + 30000;  // 5 erros: bloqueia 30 s
+      }
+    }
+    uint8_t v = autenticado ? estado : BLOQUEADO;
+    caracEstado->setValue(&v, 1);
+    caracEstado->notify();
+  }
 };
 
 class EstadoCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* c) override {
-    if (c->getLength() >= 1) pedido = c->getData()[0];
+    if (autenticado && c->getLength() >= 1) pedido = c->getData()[0];
   }
 };
 
+void lerBotao() {
+  static bool ultimo = HIGH;
+  static unsigned long mudouEm = 0;
+  static bool estavel = HIGH;
+  bool agora = digitalRead(PINO_BOTAO);
+  if (agora != ultimo) {
+    ultimo = agora;
+    mudouEm = millis();
+  }
+  if (millis() - mudouEm > 50 && agora != estavel) {
+    estavel = agora;
+    if (estavel == LOW) comandar(!(estado == ABERTO || estado == ABRINDO));
+  }
+}
+
 void setup() {
   Serial.begin(115200);
-  pinMode(PINO_DIFUSOR, OUTPUT);
-  aplicarSaida(false);
+  pinMode(PINO_ABRIR, OUTPUT);
+  pinMode(PINO_FECHAR, OUTPUT);
+  reles(false, false);
+  pinMode(PINO_BOTAO, INPUT_PULLUP);
+
+  memoria.begin("difusor", false);
+  estado = (Estado)memoria.getUChar("estado", FECHADO);
+  if (estado != ABERTO) estado = FECHADO;
 
   BLEDevice::init(NOME_BLUETOOTH);
   BLEServer* servidor = BLEDevice::createServer();
@@ -76,7 +145,10 @@ void setup() {
           BLECharacteristic::PROPERTY_NOTIFY);
   caracEstado->addDescriptor(new BLE2902());
   caracEstado->setCallbacks(new EstadoCallbacks());
-  uint8_t v = 0;
+  BLECharacteristic* caracSenha = servico->createCharacteristic(
+      UUID_SENHA, BLECharacteristic::PROPERTY_WRITE);
+  caracSenha->setCallbacks(new SenhaCallbacks());
+  uint8_t v = BLOQUEADO;
   caracEstado->setValue(&v, 1);
   servico->start();
 
@@ -84,19 +156,44 @@ void setup() {
   anuncio->addServiceUUID(UUID_SERVICO);
   anuncio->setScanResponse(true);
   BLEDevice::startAdvertising();
-  Serial.println("Bluetooth pronto: procure por \"Difusor\"");
+  Serial.printf("Bluetooth pronto: procure por \"%s\". Posicao salva: %s\n",
+                NOME_BLUETOOTH, estado == ABERTO ? "ABERTO" : "FECHADO");
 }
 
 void loop() {
-  int p = pedido;
-  if (p >= 0) {
-    pedido = -1;
-    definirDifusor(p == 2 ? !ligado : p == 1);
+  if (conectou) {
+    conectou = false;
+    publicarEstado();  // nova conexao comeca bloqueada
   }
+
+  int p = pedido;
+  if (p == 0 || p == 1) comandar(p == 1);
+  pedido = -1;
+
+  lerBotao();
+
+  // Liga o rele do comando pendente depois da pausa
+  if (pendente >= 0 && millis() >= liberarEm) {
+    bool abrir = pendente == 1;
+    pendente = -1;
+    reles(abrir, !abrir);
+    inicioMovimento = millis();
+    definirEstado(abrir ? ABRINDO : FECHANDO);
+  }
+
+  // Desliga o rele quando o tempo acaba
+  if (estado == ABRINDO && millis() - inicioMovimento >= TEMPO_ABRIR_MS) {
+    reles(false, false);
+    definirEstado(ABERTO);
+  } else if (estado == FECHANDO && millis() - inicioMovimento >= TEMPO_FECHAR_MS) {
+    reles(false, false);
+    definirEstado(FECHADO);
+  }
+
   if (reanunciar) {
     reanunciar = false;
     delay(200);
     BLEDevice::startAdvertising();
   }
-  delay(10);
+  delay(5);
 }
