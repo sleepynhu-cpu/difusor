@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#050608">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -80,6 +81,8 @@
   .acao-sec:active { background:rgba(92,207,255,.16); }
   .acao-sec:disabled { opacity:.55; }
   .acao-sec svg { width:18px; height:18px; stroke:var(--gelo); flex:none; }
+  .acao-sec[hidden] { display:none; }
+  .acao-sec.instalar { border-color:var(--linha); background:none; box-shadow:none; font-size:11px; padding:13px; }
   .link { background:none; border:none; color:var(--sub); font-family:var(--texto); font-size:13px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; padding:6px; }
   p { margin:0; color:var(--sub); font-size:17px; line-height:1.45; font-weight:500; }
   p b { color:var(--txt); }
@@ -129,6 +132,10 @@
         <span>CONECTAR</span>
       </button>
       <p class="erro" id="erro"></p>
+      <button class="acao-sec instalar" id="btnInstalar" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        <span>INSTALAR APP</span>
+      </button>
     </section>
 
     <!-- Senha -->
@@ -280,6 +287,25 @@
   $('copiar').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(location.href); $('copiar').textContent = 'COPIADO'; }
     catch (e) { prompt('Copie o link:', location.href); }
+  });
+
+  // Funciona offline depois da primeira visita
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+  // Botão "Instalar app" (Chrome no Android)
+  let pedidoInstalar = null;
+  window.addEventListener('beforeinstallprompt', ev => {
+    ev.preventDefault();
+    pedidoInstalar = ev;
+    $('btnInstalar').hidden = false;
+  });
+  window.addEventListener('appinstalled', () => { $('btnInstalar').hidden = true; });
+  $('btnInstalar').addEventListener('click', async () => {
+    if (!pedidoInstalar) return;
+    pedidoInstalar.prompt();
+    await pedidoInstalar.userChoice;
+    pedidoInstalar = null;
+    $('btnInstalar').hidden = true;
   });
 
   if (!navigator.bluetooth) {
