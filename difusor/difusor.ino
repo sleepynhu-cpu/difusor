@@ -7,6 +7,7 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 #include <Preferences.h>
+#include <esp_task_wdt.h>
 #include "senha.h"  // fica so no seu PC (nao vai para o GitHub); modelo em senha.exemplo.h
 
 // ======== CONFIGURE AQUI ========
@@ -124,6 +125,13 @@ void lerBotao() {
 
 void setup() {
   Serial.begin(115200);
+  Serial.printf("\nReiniciou. Motivo: %d (1=liga, 3=software, 4/5/6/7=travou, 9=queda de tensao)\n",
+                esp_reset_reason());
+
+  // Se o loop travar por 5 s, a ESP32 reinicia sozinha
+  esp_task_wdt_config_t cao = {.timeout_ms = 5000, .idle_core_mask = 0, .trigger_panic = true};
+  esp_task_wdt_reconfigure(&cao);
+  esp_task_wdt_add(NULL);
   pinMode(PINO_ABRIR, OUTPUT);
   pinMode(PINO_FECHAR, OUTPUT);
   reles(false, false);
@@ -194,5 +202,6 @@ void loop() {
     delay(200);
     BLEDevice::startAdvertising();
   }
+  esp_task_wdt_reset();
   delay(5);
 }
